@@ -17,6 +17,7 @@ rotate_vertices:
                 move.l  p_vertices(pc),a1
                 move.l	p_rotated_verts(pc),a2 
                 movem.w origo(pc),a3-a4     ; cx/cy
+                add.w   #screen_height*8,a4
                 move.w  numverts(pc),d7
 
 .vloop:         fmove.w (a1)+,fp0    ; get vertex coords

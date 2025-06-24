@@ -8,6 +8,10 @@
 screen_width = 320
 screen_height = 180
 bplsize = screen_width*screen_height/8
+clip_top = 0
+clip_left = 0
+clip_right = screen_width-1
+clip_bottom = screen_height-1
 
 ; ALL CONFIGURABLE PARAMETERS OR THE DATA IS IN THIS FILE!
 ; CHANGING ANY OTHER FILE IS NOT NECESSARY.
@@ -15,15 +19,15 @@ bplsize = screen_width*screen_height/8
 ; object creation parameters and modifiers
 ; calculated basic shape is a torus. 
 obj_circles = 32 ; torus circles (8,16,32 or 64)
-obj_rounds = 128 ; torus rounds (8,16,32 or 64)
-obj_width = 8000 ; torus width
-obj_thick = 450 ; shape thickness
-obj_scale = 4000 ; shape scale
-obj_step = 96 ; shape modifier
-obj_factor = 64 ; shape modifier depth
+obj_rounds = 16 ; torus rounds (8,16,32 or 64)
+obj_width = 15000 ; torus width
+obj_thick = 500 ; shape thickness
+obj_scale = 2500 ; shape scale
+obj_step = 0 ; shape modifier
+obj_factor = 16 ; shape modifier depth
 vertices = obj_circles*obj_rounds
 surfaces = vertices*2
-zoomlevel = 1200
+zoomlevel = 3000
 
                 ; all routines other than generic subroutines are splitted into multiple
                 ; files for easier access and better readability
@@ -82,8 +86,8 @@ initialize:
                 ; create lookup table for line offsets in the screen buffer
 
                 move.l  p_ytable(pc),a0
+                move.w  #10*screen_height-1,d7
                 sub.l   a1,a1
-                move.w  #screen_height-1,d7
 .mklp:          move.l  a1,(a0)+
                 lea     screen_width(a1),a1
                 dbf     d7,.mklp
@@ -321,7 +325,6 @@ rotate_object:
                 rts
 
 ; memory pointers
-
 p_showscreen:   dc.l    screen1
 p_drawscreen:   dc.l    screen2
 p_clearscreen:  dc.l    screen3
@@ -349,15 +352,15 @@ numfaces:       dc.w    surfaces-1
 
 coplist:
                 dc.w	FMODE,3		; Fetch Mode
-                dc.w	BPLCON3,$C20
                 dc.w	BPLCON0,$0210	; 8 planes
                 dc.w	BPLCON1,$0000	; Scroll
                 dc.w	BPLCON2,$224	; Priority
+                dc.w	BPLCON3,$C00
                 dc.w	BPL1MOD,0	    ; modulos
                 dc.w	BPL2MOD,0
                 dc.w	DIWHIGH,$2100
                 dc.w	DIWSTRT,$5381
-                dc.w	DIWSTOP,$05c1	
+                dc.w	DIWSTOP,$07c1	
                 dc.w	DDFSTRT,$0038
                 dc.w	DDFSTOP,$00b8
 coplist_bpl:
@@ -394,7 +397,12 @@ coplist_spr:
                 dc.w    SPR6PTL,0
                 dc.w    SPR7PTH,0
                 dc.w    SPR7PTL,0
-                ; dc.w    $ffdf,-2
+
+                dc.w    $5311,-2
+                dc.w    COL0,$004
+                dc.w    $ffdf,-2    ; magic code to wait for lines over 255
+                dc.w    $0711,-2
+                dc.w    COL0,$000
                 dc.l    -2
 
 spriteoff:      dc.l    0,0,-1      ; dummy sprite data (must reside in chip memory)
@@ -458,7 +466,7 @@ rotated_xyz:    ds.w    vertices*4
 rotated_n:      ds.w    vertices
 
 ; LUT for screen linestart offsets
-ytable:         ds.l    screen_height
+ytable:         ds.l    10*screen_height
 
 ; buffers for triangle rasterization
 left_buffer:    ds.l    screen_height

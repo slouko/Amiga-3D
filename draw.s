@@ -111,18 +111,23 @@ do_line_short_2:
                 move.w	tri_p1+2,d1		;top Y
                 sub.w   d1,d7               ;tri height
                 subq.w  #1,d7
-                move.w  d7,d5               ; height
                 bmi     .tridone
+                ; add.w   #8*screen_height,d1
 
                 move.l	p_drawbuffer(pc),a0
-                move.l  a0,a4
+                move.l  #screen_width*screen_height,d5
+                move.l  a0,a4   ; top clipping address
+                add.l   #clip_top*screen_width,a4
                 move.l  a0,a5
-                add.l   #screen_width*screen_height,a5
+                add.l   #clip_bottom*screen_width,a5
+                lsl.l   #3,d5   ; 8 screens
+                sub.l   d5,a0
+                ; sub.l   d5,a0
 
     	        move.l	p_left_buffer(pc),a1			;the left data list.
             	move.l	p_right_buffer(pc),a2			;the right data list.
                 move.l  p_ytable(pc),a3
-                add.l   (a3,d1.w*4),a0      ;top line start
+                add.l  (a3,d1.w*4),a0      ;top line start
                 move.w  tri_p2+2,d2     ;y2
                 sub.w   tri_p1+2,d2     ;-y1
                 move.w  (a1,d2.w*4),d4      ;right x
@@ -163,6 +168,10 @@ do_line_short_2:
                 addx.b  d2,d0
                 dbf     d1,.inner
 .skip:
+                clr.b   clip_left(a0)
+                clr.b   clip_left+1(a0)
+                clr.b   clip_right(a0)
+                clr.b   clip_right+1(a0)
                 lea     screen_width(a0),a0 ; next scanline
                 dbf     d7,.outer
 .tridone:
@@ -203,13 +212,13 @@ triangle_line:
 .flp:
                 subq.w  #1,d7
                 bmi.s   .done
-                cmp.w   #screen_width,d0
-                bge.s   .fclipr
-                tst.w   d0
-                bpl.s   .fplot
-.fclipl:        clr.w   (a4)
+                cmp.w   #clip_right,d0
+                bgt.s   .fclipr
+                cmp.w   #clip_left,d0
+                bgt.s   .fplot
+.fclipl:        move.w  #clip_left,(a4)
                 bra.s   .fskip
-.fclipr:        move.w  #screen_width-1,(a4)
+.fclipr:        move.w  #clip_right,(a4)
                 bra.s   .fskip
 .fplot:         move.w  d0,(a4)
 .fskip:         move.w  d4,2(a4)
@@ -233,13 +242,13 @@ triangle_line:
 .slp:
                 subq.w  #1,d7
                 bmi.s   .done
-                cmp.w   #screen_width,d0
-                bge.s   .sclipr
-                tst.w   d0
-                bpl.s   .splot
-                clr.w   (a4)+
+                cmp.w   #clip_right,d0
+                bgt.s   .sclipr
+                cmp.w   #clip_left,d0
+                bgt.s   .splot
+                move.w  #clip_left,(a4)+
                 bra.s   .sskip
-.sclipr:        move.w  #screen_width-1,(a4)+
+.sclipr:        move.w  #clip_right,(a4)+
                 bra.s   .sskip
 .splot:         move.w  d0,(a4)+
 .sskip:         move.w  d4,(a4)+

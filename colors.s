@@ -49,7 +49,6 @@ set_aga_color:
                 move.w  d2,d1    ; merge both into d1,l
 
                 move.w  d0,d2
-                move.w  d0,d3
                 and.w   #%00011111,d0
                 or.b    #$c0,d0         ; *2 below,$180 first register
                 and.w   #%11100000,d2   ; upper 3 bits of color register
