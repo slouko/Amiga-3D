@@ -14,16 +14,16 @@ bplsize = screen_width*screen_height/8
 
 ; object creation parameters and modifiers
 ; calculated basic shape is a torus. 
-obj_circles = 16 ; torus circles (8,16,32 or 64)
-obj_rounds = 32 ; torus rounds (8,16,32 or 64)
-obj_width = 20000 ; torus width
-obj_thick = 600 ; shape thickness
+obj_circles = 32 ; torus circles (8,16,32 or 64)
+obj_rounds = 128 ; torus rounds (8,16,32 or 64)
+obj_width = 8000 ; torus width
+obj_thick = 450 ; shape thickness
 obj_scale = 4000 ; shape scale
-obj_step = 128 ; shape modifier
-obj_factor = 32 ; shape modifier depth
+obj_step = 96 ; shape modifier
+obj_factor = 64 ; shape modifier depth
 vertices = obj_circles*obj_rounds
 surfaces = vertices*2
-zoomlevel = 900
+zoomlevel = 1200
 
                 ; all routines other than generic subroutines are splitted into multiple
                 ; files for easier access and better readability
@@ -130,6 +130,8 @@ initialize:
                 bsr     init_c2p
                 bra     swap_screen
 
+; Main programs starts here
+
 main:
                 lea     $dff000,a6
                 lea	    coplist_spr+2,a0
@@ -141,13 +143,15 @@ main:
                 swap    d0 
                 addq.l  #8,a0
                 dbf	    d7,.sproff
-                move.l  #coplist,COP1LC(a6)
+                move.l  #coplist,COP1LC(a6) ; enable copperlist
 
                 lea     p_surfaces(pc),a0
                 move.l  #obj_surfaces,(a0)+
                 move.w  #vertices-1,(a0)+
                 move.w  #surfaces-1,(a0)
 
+
+; main loop that will run until left mouse button is pressed
 mainloop:             
                 ; bsr     wait_vbl
                 addq.w  #1,tick_count   ; count drawed frames
@@ -166,29 +170,34 @@ mainloop:
 .exit:
                 rts
 
+; this subroutine is called from Vertical Blanking Interrupt.
+; 50 times per second on PAL-machines.
 
 vbl_subroutine:
                 addq.b  #1,sync
                 subq.w  #1,sec_count
                 bpl.s   .done
-                move.w  #50,sec_count
-                move.w  tick_count(pc),fps
+                move.w  #50,sec_count   ; count 1 second
+                move.w  tick_count(pc),fps  ; and cunt how many ticks we got during that second
                 clr.w   tick_count
 .done:          rts
 
-
+; wait vertical blank for fixed screen synchronization
 wait_vbl:       lea     sync(pc),a0
                 clr.b   (a0)
 .wait:          tst.b   (a0)
                 beq.s   .wait
                 rts
 
+; Rotate triplebuffers
 swap_screen:
                 lea     p_showscreen(pc),a0
                 movem.l (a0),d0-d2
                 exg     d0,d1
                 exg     d1,d2
                 movem.l d0-d2,(a0)
+
+                ; update new showscreen pointers to copperlist
 
                 move.l  #screen_width*screen_height/8,d1
                 moveq   #8-1,d7
@@ -202,6 +211,7 @@ swap_screen:
                 dbf    d7,.loop
                 rts
 
+; Create Sin and Cos data table 
 make_sinus_fpu:
                 move.l  p_sinus(pc),a0
 				move.w	#2048,d7
@@ -212,14 +222,14 @@ make_sinus_fpu:
 				add.w 	d7,d7
 				subq.w 	#1,d7
 .mksin:			fsin	fp0,fp2
-				fmul.d	#32767,fp2
+				fmul.d	#32767,fp2  ; maximized 16-bits peak values
 				fmove.w	fp2,(a0)+
 				fadd	fp1,fp0
 				dbf 	d7,.mksin 
                 rts
 
 
-
+; Clear chunky buffer for drawing
 clear_screen:   
                 move.l  p_drawbuffer(pc),a0
                 move.w  #screen_width*screen_height/4-1,d7
@@ -228,16 +238,9 @@ clear_screen:
                 dbf    d7,.cls
                 rts
 
-clear_border:   
-                move.l  p_drawbuffer(pc),a0
-                move.w  #screen_height-1,d7
-                move.l  #screen_width,d0
-.clb:           clr.l   -2(a0)
-                add.l   d0,a0
-                dbf     d7,.clb 
-                rts
-
-
+; Build the table of average Z-values for each surface (Z-buffer)
+; and then Quicksort the Z-buffer to get the order to draw the surfaces
+; from back to front
 sort_surfaces:
                 move.l  p_surfaces(pc),a0
                 move.l  p_rotated_verts(pc),a1
@@ -246,18 +249,22 @@ sort_surfaces:
                 move.w  numfaces(pc),d7
 .buildlp:       movem.w 2(a0),d0-d2   ; get vertices, skip color
                 move.w  4(a1,d0.w*8),d5    ; v1z
-                add.w   4(a1,d0.w*8),d5    ; v2z
+                add.w   4(a1,d0.w*8),d5    ; v1z
                 add.w   4(a1,d1.w*8),d5    ; v2z
                 add.w   4(a1,d2.w*8),d5    ; v3z
-                asr.w   #2,d5
-                neg.w 	d5
-                move.w  d5,(a2)+        ; Z-value
-                move.w  a3,(a2)+        ; face offset
+                asr.w   #2,d5   ; get average Z of all vertices
+                neg.w 	d5      ; reverse order
+                move.w  d5,(a2)+ ; store Z-value and face offset
+                move.w  a3,(a2)+ ; as one combined 32-bits value
                 addq.w  #8,a0
                 addq.w  #8,a3
                 dbf     d7,.buildlp    
-quicksort:
-                move.l  a2,a1 
+
+; specially tailored quicksort that sorts 32-bits values
+; by first 16-bits only. This limits the Z-buffer maximum
+; depth to 32767 surfaces, but it's more than enough for us
+
+quicksort:      move.l  a2,a1 
                 move.l  p_sortbuffer(pc),a0
                 moveq   #-4,d2
                 subq.l  #4,a1
@@ -270,11 +277,11 @@ quicksort:
                 move.w  (a0,d0.w),d0    ; pivot
 .loop:          subq.l  #4,a2 
 .left:          addq.l  #4,a2
-                cmp.w   (a2),d0
+                cmp.w   (a2),d0         ; only sort by first 16bits
                 bgt.s   .left
                 addq.l  #4,a3
 .right:         subq.l  #4,a3
-                cmp.w   (a3),d0
+                cmp.w   (a3),d0         ; only sort by first 16bits
                 blt.s   .right
                 cmp.l   a2,a3
                 blt.s   .check
@@ -297,6 +304,7 @@ quicksort:
                 bra.s   .qsort
 .done:          rts
 
+; make our object to spin
 
 rotate_object:
                 lea     ax(pc),a0
