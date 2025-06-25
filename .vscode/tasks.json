@@ -1,0 +1,15 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Build Amiga-3D",
+      "type": "shell",
+      "command": "vasmm68k_mot -m68040 -Devpac -Fhunkexe main.s -o main.exe",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "problemMatcher": []
+    }
+  ]
+}
