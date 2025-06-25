@@ -3,6 +3,20 @@
         {
             "type": "amiga-assembly",
             "request": "launch",
+            "name": "FS-UAE Debug",
+            "stopOnEntry": false,
+            "program": "${workspaceFolder}/uae/dh0/main.exe",
+            "remoteProgram": "SYS:main.exe",
+            "emulatorType": "fs-uae",
+            "emulatorArgs": [
+                "--hard_drive_0=${workspaceFolder}/uae/dh0",
+                "--automatic_input_grab=0"
+            ],
+            "preLaunchTask": "amigaassembly: build"
+        },
+        {
+            "type": "amiga-assembly",
+            "request": "launch",
             "name": "FS-UAE Launch",
             "noDebug": true,
             "program": "${workspaceFolder}/uae/dh0/main.exe",
