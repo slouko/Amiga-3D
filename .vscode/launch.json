@@ -5,8 +5,8 @@
             "request": "launch",
             "name": "FS-UAE Launch",
             "noDebug": true,
-            "program": "${workspaceFolder}/uae/dh0/myprogram",
-            "remoteProgram": "SYS:myprogram",
+            "program": "${workspaceFolder}/uae/dh0/main.exe",
+            "remoteProgram": "SYS:main.exe",
             "emulatorType": "fs-uae",
             "emulatorArgs": [
                 "--model=A4000",
