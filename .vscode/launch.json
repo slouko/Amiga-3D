@@ -1,0 +1,21 @@
+{
+    "configurations": [
+        {
+            "type": "amiga-assembly",
+            "request": "launch",
+            "name": "FS-UAE Launch",
+            "noDebug": true,
+            "program": "${workspaceFolder}/uae/dh0/myprogram",
+            "remoteProgram": "SYS:myprogram",
+            "emulatorType": "fs-uae",
+            "emulatorArgs": [
+                "--model=A4000",
+                "--cpu_model=68040",
+                "--fast_memory=8",
+                "--hard_drive_0=${workspaceFolder}/uae/dh0",
+                "--automatic_input_grab=0"
+            ],
+            "preLaunchTask": "amigaassembly: build"
+        }
+    ]
+}
