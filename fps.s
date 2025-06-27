@@ -37,7 +37,10 @@ print:          move.l  p_drawbuffer(pc),a1
                 lea     (a0,d2.w),a2
                 tst.b   d2
                 bne.s   .h
-
+                moveq   #10,d2
+                tst.b   d1
+                bne.s   .h
+                moveq   #10,d1
 .h:
                 lea     (a0,d1.w),a1 
                 lea     (a0,d0.w),a0 

@@ -18,27 +18,16 @@ clip_bottom = screen_height-1
 
 ; object creation parameters and modifiers
 ; calculated basic shape is a torus. 
-; obj_circles = 32 ; torus circles (8,16,32 or 64)
-; obj_rounds = 16 ; torus rounds (8,16,32 or 64)
-; obj_width = 15000 ; torus width
-; obj_thick = 500 ; shape thickness
-; obj_scale = 2500 ; shape scale
-; obj_step = 0 ; shape modifier
-; obj_factor = 16 ; shape modifier depth
-; vertices = obj_circles*obj_rounds
-; surfaces = vertices*2
-; zoomlevel = 3000
-
 obj_circles = 16 ; torus circles (8,16,32 or 64)
-obj_rounds = 32 ; torus rounds (8,16,32 or 64)
-obj_width = 20000 ; torus width
-obj_thick = 600 ; shape thickness
-obj_scale = 4000 ; shape scale
-obj_step = 128 ; shape modifier
-obj_factor = 32 ; shape modifier depth
+obj_rounds = 16 ; torus rounds (8,16,32 or 64)
+obj_width = 15000 ; torus width
+obj_thick = 500 ; shape thickness
+obj_scale = 2500 ; shape scale
+obj_step = 0 ; shape modifier
+obj_factor = 16 ; shape modifier depth
 vertices = obj_circles*obj_rounds
 surfaces = vertices*2
-zoomlevel = 900
+zoomlevel = 1000
 
                 ; all routines other than generic subroutines are splitted into multiple
                 ; files for easier access and better readability
@@ -50,6 +39,7 @@ zoomlevel = 900
                 INCLUDE "rotate.s"  ; 3D-math routines
                 INCLUDE "draw.s"    ; Triangle drawing and gouraud shading
                 INCLUDE "fps.s"     ; Simple FPS printing
+                even
 
 ; object angles
 ax:            	dc.s	0
