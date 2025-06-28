@@ -4,7 +4,7 @@
     {
       "label": "Build Amiga-3D",
       "type": "shell",
-      "command": "vasmm68k_mot -m68040 -Devpac -Fhunkexe main.s -o main.exe && cp main.exe uae/dh0/",
+      "command": "vasmm68k_mot -m68040 -Devpac -Fhunkexe Session1/main.s -o Session1/main.exe && cp Session1/main.exe ../uae/dh0/",
       "group": {
         "kind": "build",
         "isDefault": true
