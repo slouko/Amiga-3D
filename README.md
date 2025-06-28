@@ -15,7 +15,7 @@ Execution requires an Amiga computer with AGA-chipset (Amiga 1200 or 4000) with 
 Easiest to build the program is using AsmPro/AsmOne compiler where you need just to load the **main.s** source-code in to the editor by selecting folder with command **v foldername** and reading the actual source-code with command **r main.s**. Then compiling the source with command **a**. After successful compiling you can optionally create an executable file with command **wo filename**. You can either run the program from an editor with command **j**. Or running the executable from CLI.
 Alternately you can build the program using your cross-compiling environment with following command:
 **vasmm68k_mot -m68040 -Devpac -Fhunkexe main.s -o main.exe**
-and after successful compilng copy the executable file to your Amiga and run it from CLI.
+and after successful compilng copy the executable file to your Amiga and run it from CLI. A Visual Studio Code template is provided and it is recommended to to have the "amiga assembly" extension installed.
 
 # The Source Code
 Sources for this program are splitted in to multiple files. File names describes what they do.
