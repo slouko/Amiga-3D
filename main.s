@@ -44,17 +44,17 @@ vertices = obj_circles*obj_rounds
 surfaces = vertices*2
 zoomlevel = 900
 
-                ; all routines other than generic subroutines are splitted into multiple
-                ; files for easier access and better readability
+; all routines other than generic subroutines are splitted into multiple
+; files for easier access and better readability
 
-                INCLUDE "init.s"    ; Amiga OS initialization code that executes this program
-                INCLUDE "object.s"  ; 3D object creation code
-                INCLUDE "c2p.s"     ; Generic Chunky-to-Planar code by Michael Kalms
-                INCLUDE "colors.s"  ; Color ramp generator and AGA-color handler
-                INCLUDE "rotate.s"  ; 3D-math routines
-                INCLUDE "draw.s"    ; Triangle drawing and gouraud shading
-                INCLUDE "fps.s"     ; Simple FPS printing
-                even
+    INCLUDE "init.s"    ; Amiga OS initialization code that executes this program
+    INCLUDE "object.s"  ; 3D object creation code
+    INCLUDE "c2p.s"     ; Generic Chunky-to-Planar code by Michael Kalms
+    INCLUDE "colors.s"  ; Color ramp generator and AGA-color handler
+    INCLUDE "rotate.s"  ; 3D-math routines
+    INCLUDE "draw.s"    ; Triangle drawing and gouraud shading
+    INCLUDE "fps.s"     ; Simple FPS printing
+    even
 
 ; object angles
 ax:            	dc.s	0
@@ -94,6 +94,54 @@ sec_count:      dc.w    1   ; one second frames counter
 tick_count:     dc.w    0   ; draw update counter
 fps:            dc.w    0   ; current update rate
 dimmer:         dc.w    255 ; Palette dimmer
+
+; --- Parameter sets ---
+simple_params:
+                dc.w 16      ; obj_circles
+                dc.w 16      ; obj_rounds
+                dc.w 15000   ; obj_width
+                dc.w 500     ; obj_thick
+                dc.w 2500    ; obj_scale
+                dc.w 0       ; obj_step
+                dc.w 16      ; obj_factor
+                dc.w 1000    ; zoomlevel
+
+complex_params:
+                dc.w 16
+                dc.w 32
+                dc.w 20000
+                dc.w 600
+                dc.w 4000
+                dc.w 128
+                dc.w 32
+                dc.w 900
+
+donut_mode:     dc.w 1    ; 0 = simple, 1 = complex
+
+last_key:       dc.b 0
+
+switch_donut:
+                tst.w   donut_mode
+                beq.s   .to_complex
+                lea     simple_params(pc),a0
+                moveq   #1,d0
+                bra.s   .copy
+.to_complex:
+                lea     complex_params(pc),a0
+                moveq   #0,d0
+.copy:
+                lea     obj_circles(pc),a1
+                moveq   #7,d1
+.copyloop:
+                move.w  (a0)+,(a1)+
+                dbf     d1,.copyloop
+                move.w  d0,donut_mode
+                bsr     make_surfaces
+                bsr     make_vertices
+                bsr     make_normals
+                rts
+
+
 
 ; Initialize subroutine is run by init code before main execution
 ; This call contains all precalculations etc.
@@ -185,9 +233,27 @@ mainloop:
                 bsr     print
                 bsr     c2p
 
+; --- Keyboard check for M key (raw code $32) ---
+                move.b  $dff016,d0         ; Read keyboard data register
+                cmp.b   last_key(pc),d0
+                beq.s   .no_new_key
+                move.b  d0,last_key
+
+                cmp.b   #$32,d0            ; $32 = M key down
+                beq.s   .switch_model
+
                 btst    #6,CIAAPRA
                 bne.s    mainloop
-.exit:
+                beq.s   .exit
+
+.switch_model:
+                bsr     switch_donut
+                bra.s   mainloop
+
+.no_new_key:
+                btst    #6,CIAAPRA
+                bne.s   mainloop
+.exit: 
                 rts
 
 ; this subroutine is called from Vertical Blanking Interrupt.
