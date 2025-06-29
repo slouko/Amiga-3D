@@ -95,51 +95,51 @@ tick_count:     dc.w    0   ; draw update counter
 fps:            dc.w    0   ; current update rate
 dimmer:         dc.w    255 ; Palette dimmer
 
-; --- Parameter sets ---
-simple_params:
-                dc.w 16      ; obj_circles
-                dc.w 16      ; obj_rounds
-                dc.w 15000   ; obj_width
-                dc.w 500     ; obj_thick
-                dc.w 2500    ; obj_scale
-                dc.w 0       ; obj_step
-                dc.w 16      ; obj_factor
-                dc.w 1000    ; zoomlevel
+; ; --- Parameter sets ---
+; simple_params:
+;                 dc.w 16      ; obj_circles
+;                 dc.w 16      ; obj_rounds
+;                 dc.w 15000   ; obj_width
+;                 dc.w 500     ; obj_thick
+;                 dc.w 2500    ; obj_scale
+;                 dc.w 0       ; obj_step
+;                 dc.w 16      ; obj_factor
+;                 dc.w 1000    ; zoomlevel
 
-complex_params:
-                dc.w 16
-                dc.w 32
-                dc.w 20000
-                dc.w 600
-                dc.w 4000
-                dc.w 128
-                dc.w 32
-                dc.w 900
+; complex_params:
+;                 dc.w 16
+;                 dc.w 32
+;                 dc.w 20000
+;                 dc.w 600
+;                 dc.w 4000
+;                 dc.w 128
+;                 dc.w 32
+;                 dc.w 900
 
-donut_mode:     dc.w 1    ; 0 = simple, 1 = complex
+; donut_mode:     dc.w 1    ; 0 = simple, 1 = complex
 
-last_key:       dc.b 0
+; last_key:       dc.b 0
 
-switch_donut:
-                tst.w   donut_mode
-                beq.s   .to_complex
-                lea     simple_params(pc),a0
-                moveq   #1,d0
-                bra.s   .copy
-.to_complex:
-                lea     complex_params(pc),a0
-                moveq   #0,d0
-.copy:
-                lea     obj_circles(pc),a1
-                moveq   #7,d1
-.copyloop:
-                move.w  (a0)+,(a1)+
-                dbf     d1,.copyloop
-                move.w  d0,donut_mode
-                bsr     make_surfaces
-                bsr     make_vertices
-                bsr     make_normals
-                rts
+; switch_donut:
+;                 tst.w   donut_mode
+;                 beq.s   .to_complex
+;                 lea     simple_params(pc),a0
+;                 moveq   #1,d0
+;                 bra.s   .copy
+; .to_complex:
+;                 lea     complex_params(pc),a0
+;                 moveq   #0,d0
+; .copy:
+;                 lea     obj_circles(pc),a1
+;                 moveq   #7,d1
+; .copyloop:
+;                 move.w  (a0)+,(a1)+
+;                 dbf     d1,.copyloop
+;                 move.w  d0,donut_mode
+;                 bsr     make_surfaces
+;                 bsr     make_vertices
+;                 bsr     make_normals
+;                 rts
 
 
 
@@ -233,28 +233,36 @@ mainloop:
                 bsr     print
                 bsr     c2p
 
-; --- Keyboard check for M key (raw code $32) ---
-                move.b  $dff016,d0         ; Read keyboard data register
-                cmp.b   last_key(pc),d0
-                beq.s   .no_new_key
-                move.b  d0,last_key
+; ; --- Keyboard check for M key (raw code $32) ---
+;                 move.b  $dff016,d0         ; Read keyboard data register
+;                 cmp.b   last_key(pc),d0
+;                 beq.s   .no_new_key
+;                 move.b  d0,last_key
 
-                cmp.b   #$32,d0            ; $32 = M key down
-                beq.s   .switch_model
+;                 cmp.b   #$32,d0            ; $32 = M key down
+;                 beq.s   .switch_model
+
+                bsr	    readkey
+                move.b  d0,key
+                cmp.b	#$45,d0			; esc pressed?
+                beq.s   .exit
 
                 btst    #6,CIAAPRA
                 bne.s    mainloop
-                beq.s   .exit
-
-.switch_model:
-                bsr     switch_donut
-                bra.s   mainloop
-
-.no_new_key:
-                btst    #6,CIAAPRA
-                bne.s   mainloop
 .exit: 
                 rts
+
+key:            dc.w    0
+
+readkey:		move.b	CIAASDR,d0
+				bset	#6,CIAACRA
+				ror.b	#1,d0
+				not.b	d0
+				moveq	#5,d1
+.wait:			tst.b	CIAAPRA
+				dbf		d1,.wait
+				bclr	#6,CIAACRA
+				rts
 
 ; this subroutine is called from Vertical Blanking Interrupt.
 ; 50 times per second on PAL-machines.
