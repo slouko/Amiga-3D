@@ -4,10 +4,20 @@
     {
       "label": "Build Amiga-3D",
       "type": "shell",
-      "command": "vasmm68k_mot -m68040 -Devpac -Fhunkexe Session1/main.s -o Session1/main.exe && cp Session1/main.exe ../uae/dh0/",
+      "command": "vasmm68k_mot -m68040 -Devpac -Fhunkexe Session1/main.s -o Session1/main.exe && cp Session1/main.exe ./uae/dh0/",
       "group": {
         "kind": "build",
         "isDefault": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Build Amiga-3D Benchmark",
+      "type": "shell",
+      "command": "vasmm68k_mot -m68040 -Devpac -Fhunkexe SessionBenchmark/main.s -o SessionBenchmark/main.exe && cp SessionBenchmark/main.exe ./uae/dh0/",
+      "group": {
+        "kind": "build",
+        "isDefault": false
       },
       "problemMatcher": []
     }
